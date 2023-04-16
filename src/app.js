@@ -1,13 +1,20 @@
 import express from 'express';
 import cors from 'cors';
-
+import morgan from 'morgan';
 import Routes from './routes/index.js';
 
 export default async (channel) => {
     const app = express();
-    app.use(express.json());
     app.use(cors({ origin: '*' }));
+    app.use(express.json());
     // app.use(cors({ origin: ['http://localhost:8000'] }));
+
+    app.use(
+        morgan(':method :url :status :res[content-length] - :response-time ms'),
+    );
+    morgan.token('param', function (req, res, param) {
+        return req.params[param];
+    });
 
     app.use(Routes(channel));
 
