@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { APP_NAME, MONGODB_URI, PORT } = process.env;
+const { APP_NAME, MONGODB_URI, PORT, RABBITMQ_URL, EXCHANGE_NAME } =
+    process.env;
 
 const config = {
     app: {
@@ -16,6 +17,14 @@ const config = {
     },
     db: {
         uri: MONGODB_URI,
+    },
+    RABBITMQ: {
+        URL: RABBITMQ_URL,
+        CHANNEL: {
+            BORROWER_SERVICE: 'borrower_service',
+            AUTH_SERVICE: 'auth_service',
+        },
+        EXCHANGE_NAME,
     },
 };
 
