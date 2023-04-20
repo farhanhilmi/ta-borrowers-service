@@ -4,6 +4,7 @@ import subscribeEvents from '../services/subscribeEvents.js';
 import getProfile from '../services/profile/get.js';
 import { AuthorizeError } from '../utils/errorHandler.js';
 import config from '../config/index.js';
+import requestLoan from '../services/requestLoan.js';
 // import userServices from '../services/index.js';
 // subscribeEvents()
 export class UsersController {

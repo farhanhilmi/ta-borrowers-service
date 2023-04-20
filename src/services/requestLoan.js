@@ -1,7 +1,7 @@
 import { ValidationError } from '../utils/errorHandler.js';
 import { validateRequestPayload } from '../utils/index.js';
 
-export default (user, payload) => {
+export default async (user, payload) => {
     const errors = validateRequestPayload(payload, [
         'loanPurpose',
         'amount',
