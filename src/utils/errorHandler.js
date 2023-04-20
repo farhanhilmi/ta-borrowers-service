@@ -86,5 +86,11 @@ export class DataConflictError extends ErrorHandler {
     }
 }
 
+export class ActiveLoanError extends ErrorHandler {
+    constructor(message = 'You have an active loan') {
+        super(409, message, 'FAILED');
+    }
+}
+
 // const jajaa = new NotFoundError('Tidak ditemukan');
 // console.log(jajaa);

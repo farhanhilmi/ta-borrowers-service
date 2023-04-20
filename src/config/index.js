@@ -23,6 +23,7 @@ const config = {
         CHANNEL: {
             BORROWER_SERVICE: 'borrower_service',
             AUTH_SERVICE: 'auth_service',
+            LOAN: 'loans',
         },
         EXCHANGE_NAME,
     },

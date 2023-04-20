@@ -37,18 +37,19 @@ export class UsersController {
                 );
             }
             const { userId, roles } = JSON.parse(req.header('user'));
+            console.log('userId', userId);
             const payload = req.body;
             const data = await requestLoan({ userId, roles }, payload);
             // Publish to message broker (Loans service)
             PublishMessage(
                 this.channel,
-                config.RABBITMQ.CHANNEL.BORROWER_SERVICE,
+                config.RABBITMQ.CHANNEL.LOAN,
                 JSON.stringify({ data, event: 'LOAN_REQUEST' }),
             );
             res.status(201).json(
                 responseData(
-                    _,
-                    _,
+                    [],
+                    'OK',
                     'Loan request sent! Please check accordingly in your dashboard and your email for further information!',
                 ),
             );
