@@ -8,10 +8,10 @@ import requestLoan from '../services/requestLoan.js';
 // import userServices from '../services/index.js';
 // subscribeEvents()
 export class UsersController {
-    constructor(channel) {
-        this.channel = channel;
+    constructor() {
+        // this.channel = channel;
         // To listen
-        SubscribeMessage(channel, subscribeEvents);
+        SubscribeMessage(subscribeEvents, 'Borrower');
     }
 
     async getProfile(req, res, next) {
@@ -41,11 +41,12 @@ export class UsersController {
             const payload = req.body;
             const data = await requestLoan({ userId, roles }, payload);
             // Publish to message broker (Loans service)
-            PublishMessage(
-                this.channel,
-                config.RABBITMQ.CHANNEL.LOAN,
-                JSON.stringify({ data, event: 'LOAN_REQUEST' }),
-            );
+            PublishMessage(data, 'LOAN_REQUEST', 'Loan');
+            // PublishMessage(
+            //     this.channel,
+            //     config.RABBITMQ.CHANNEL.LOAN,
+            //     JSON.stringify({ data, event: 'LOAN_REQUEST' }),
+            // );
             res.status(201).json(
                 responseData(
                     [],

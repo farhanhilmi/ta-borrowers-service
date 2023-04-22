@@ -1,7 +1,7 @@
 import dbConnection from './database/connection.js';
 import config from './config/index.js';
 import expressApp from './app.js';
-import { CreateChannel } from './utils/messageBroker.js';
+// import { CreateChannel } from './utils/messageBroker.js';
 // import errorHandler from './utils/error/index.js';
 
 const startServer = async () => {
@@ -12,9 +12,9 @@ const startServer = async () => {
         //  database connection
         // await dbConnection();
 
-        const channel = await CreateChannel();
+        // const channel = await CreateChannel();
 
-        const app = await expressApp(channel);
+        const app = await expressApp();
 
         app.listen(config.app.port, () => {
             console.log(
