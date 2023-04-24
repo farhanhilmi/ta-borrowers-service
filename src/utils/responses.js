@@ -9,10 +9,16 @@ export const formatData = (data) => {
     });
 };
 
-export const responseData = (data = [], status = 'OK', message = 'success') => {
+export const responseData = (
+    data = [],
+    status = 'OK',
+    message = 'success',
+    meta = {},
+) => {
     return {
         status,
         message,
         data,
+        meta,
     };
 };

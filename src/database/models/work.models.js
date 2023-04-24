@@ -24,7 +24,7 @@ const schema = new Schema(
     {
         borrowerId: {
             type: Schema.Types.ObjectId,
-            ref: 'borrowers',
+            ref: 'Borrowers',
             required: true,
         },
         companyName: {

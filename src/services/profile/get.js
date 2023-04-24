@@ -17,7 +17,11 @@ export default async (payload) => {
         throw new AuthorizeError('User is not a borrower!');
     }
 
-    // Check if user exists
+    // const ajajda = await borrowerModels
+    //     .findOne({ userId: userId })
+    //     .populate('userId');
+    // // Check if user exists
+    // console.log('ajajda', ajajda);
 
     const [user, borrower] = await Promise.allSettled([
         await usersModels.findOne({ _id: userId }).select({
@@ -46,7 +50,7 @@ export default async (payload) => {
             _id: 0,
         });
 
-    console.log('user', user);
+    // console.log('user', user);
 
     const profile = {
         ...user.value._doc,

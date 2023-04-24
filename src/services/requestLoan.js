@@ -15,6 +15,7 @@ export default async (user, payload) => {
             'tenor',
             'interestRate',
             'repaymentSource',
+            'description',
             // 'repaymentDate',
         ]);
         if (errors.length > 0) {
@@ -28,6 +29,7 @@ export default async (user, payload) => {
             interestRate,
             repaymentAmount,
             repaymentDate,
+            description,
         } = payload;
 
         // * TODO:
@@ -39,15 +41,23 @@ export default async (user, payload) => {
         // const loanStatus = await axios.get(
         //     `http://localhost:8004/check/${user.userId}/iniktpnomor`,
         // );
-        const [loanStatus, borrower] = await Promise.allSettled([
-            axios.get(`http://localhost:8004/check/${user.userId}/iniktpnomor`),
-            borrowerModels.findOne({ userId: user.userId }),
-        ]);
+        // const [loanStatus, borrower] = await Promise.allSettled([
+        //     axios.get(`http://localhost:8004/check/${user.userId}/iniktpnomor`),
+        //     borrowerModels.findOne({ userId: user.userId }),
+        // ]);
+        console.log('userId', user.userId);
 
-        if (loanStatus.value.data.status !== 'OK') {
+        const borrower = await borrowerModels.findOne({ userId: user.userId });
+        console.log('borrower', borrower);
+        if (
+            borrower.status === 'on request' ||
+            borrower.status === 'in borrowing' ||
+            borrower.status === 'unpaid' ||
+            borrower.status === 'on process'
+        ) {
             throw new ActiveLoanError('You already has an active loan!');
         }
-        // * - check if user loan limit is not exceeded
+        // *TODO - check if user loan limit is not exceeded
 
         const loanApplication = {
             loanPurpose,
@@ -56,11 +66,12 @@ export default async (user, payload) => {
             interestRate,
             repaymentAmount,
             repaymentDate,
+            description,
         };
 
         const userData = {
             userId: user.userId,
-            borrowerId: borrower.value._id,
+            borrowerId: borrower._id,
         };
 
         return { user: userData, loanApplication };
