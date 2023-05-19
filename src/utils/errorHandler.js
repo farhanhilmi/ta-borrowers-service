@@ -7,6 +7,14 @@ export const ERROR_STATUS = {
         code: 400,
         message: 'Bad Request',
     },
+    VALIDATION_ERROR: {
+        code: 422,
+        message: 'Validation Error',
+    },
+    WRONG_CREDETENTIALS: {
+        code: 401,
+        message: 'Invalid Credentials',
+    },
     UN_AUTHORIZED: {
         code: 403,
         message: 'Unauthorized',
@@ -46,12 +54,32 @@ export class ErrorHandler extends Error {
     }
 }
 
-export class ValidationError extends ErrorHandler {
+export class RequestError extends ErrorHandler {
     constructor(message = ERROR_STATUS.BAD_REQUEST.message) {
         super(
             ERROR_STATUS.BAD_REQUEST.code,
             message,
             ERROR_STATUS.BAD_REQUEST.message,
+        );
+    }
+}
+
+export class ValidationError extends ErrorHandler {
+    constructor(message = ERROR_STATUS.VALIDATION_ERROR.message) {
+        super(
+            ERROR_STATUS.VALIDATION_ERROR.code,
+            message,
+            ERROR_STATUS.VALIDATION_ERROR.message,
+        );
+    }
+}
+
+export class CredentialsError extends ErrorHandler {
+    constructor(message = ERROR_STATUS.WRONG_CREDETENTIALS.message) {
+        super(
+            ERROR_STATUS.WRONG_CREDETENTIALS.code,
+            message,
+            ERROR_STATUS.WRONG_CREDETENTIALS.message,
         );
     }
 }

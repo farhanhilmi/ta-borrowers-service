@@ -23,7 +23,7 @@ const startServer = async () => {
             // console.log('process.env', process.env);
         }).on('error', (err) => {
             console.log(err);
-            process.exit();
+            // process.exit();
         });
         // .on('close', () => {
         //     channel.close();

@@ -1,3 +1,5 @@
+import _ from 'underscore';
+
 export const toTitleCase = (str) => {
     return str
         .split(' ')
@@ -29,4 +31,17 @@ export const validateRequestPayload = (payload, requiredFields = []) => {
     // }
 
     // return true, errorFields;
+};
+
+/**
+ * Remove keys from object and return new object without removed keys
+ * @param {Object} obj
+ * @param {Array} array of keys to be removed
+ * @returns {Object} return object without removed keys
+ */
+export const omit = (obj, keys) => {
+    if (typeof obj !== 'object') {
+        return _.omit(JSON.parse(obj), keys);
+    }
+    return _.omit(obj, keys);
 };

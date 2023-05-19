@@ -1,13 +1,25 @@
 import dotenv from 'dotenv';
 
-// dotenv.config({
-//     path: path.resolve(__dirname, process.env.NODE_ENV + '.env')
-//   });
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const env = `${process.env.NODE_ENV}.env`;
 
-const { APP_NAME, MONGODB_URI, PORT, RABBITMQ_URL, EXCHANGE_NAME } =
-    process.env;
+console.log('process.env.NODE_ENV', env);
+dotenv.config({
+    path: join(__dirname, `../../${process.env.NODE_ENV}.env`),
+});
+
+const {
+    APP_NAME,
+    MONGODB_URI,
+    PORT,
+    RABBITMQ_URL,
+    EXCHANGE_NAME,
+    REDIS_SERVER,
+} = process.env;
 
 const config = {
     app: {
@@ -27,6 +39,7 @@ const config = {
         },
         EXCHANGE_NAME,
     },
+    REDIS_SERVER,
 };
 
 export default config;

@@ -1,7 +1,8 @@
-import createBorrower from './profile/create.js';
+import BorrowerService from './borrower.services.js';
+// import createBorrower from './profile/create.js';
 import updateBorrowerStatus from './updateBorrowerStatus.js';
 
-export default (payload) => {
+export default async (payload) => {
     try {
         console.log('Triggering.... Borrower Events');
 
@@ -12,14 +13,15 @@ export default (payload) => {
 
         const { userId, status, order, qty } = data;
 
+        const borrowerService = new BorrowerService();
         switch (event) {
             // case 'ADD_TO_WISHLIST':
             case 'VERIFY_NEW_ACCOUNT':
-                createBorrower(userId);
-                break;
+                await borrowerService.createBorrower(userId);
+                return;
             case 'UPDATE_BORROWER_STATUS':
-                updateBorrowerStatus(userId, status);
-                break;
+                await updateBorrowerStatus(userId, status);
+                return;
             // case 'ADD_TO_CART':
             //     this.ManageCart(userId, product, qty, false);
             //     break;
