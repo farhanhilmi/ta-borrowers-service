@@ -31,28 +31,18 @@ import config from '../config/index.js';
 //     }
 // };
 
-export const PublishMessage = async (data, event, routingKey) => {
+export const PublishMessage = async (data, event, queueName) => {
     try {
         const connection = await amqplib.connect(config.RABBITMQ.URL);
         const channel = await connection.createChannel();
-        const exchangeName = 'my_exchange';
-        const exchangeType = 'direct';
-        // await channel.assertExchange(exchangeName, exchangeType, {
-        //     durable: true,
-        // });
-        // const queueName = 'my_queue';
-        await channel.assertQueue(exchangeName, 'direct', { durable: true });
-        // await channel.assertQueue(queueName, { durable: true });
-        // await channel.bindQueue(queueName, exchangeName, '');
+
+        await channel.assertQueue(queueName, { durable: true });
         const msg = {
             data,
             event,
         };
-        await channel.publish(
-            exchangeName,
-            routingKey,
-            Buffer.from(JSON.stringify(msg)),
-        );
+        channel.sendToQueue(queueName, Buffer.from(JSON.stringify(msg)));
+
         console.log(`Sent message: ${JSON.stringify(msg)}`);
         await channel.close();
         await connection.close();
@@ -61,73 +51,43 @@ export const PublishMessage = async (data, event, routingKey) => {
     }
 };
 
-export const SubscribeMessage = async (subscribeEvents, routingKey) => {
+export const SubscribeMessage = async (subscribeEvents, queueName) => {
     try {
         const connection = await amqplib.connect(config.RABBITMQ.URL);
         const channel = await connection.createChannel();
-        const exchangeName = 'my_exchange';
 
-        // await channel.consume(queueName, (message) => {
-        //     console.log(`Received message: ${message.content.toString()}`);
-        //     channel.ack(message);
-        // });
-        const timeout = 30000; // 30 seconds
-        await channel.assertExchange(exchangeName, 'direct', {
-            durable: true,
-        });
-        const q = await channel.assertQueue('', { exclusive: true });
+        const q = await channel.assertQueue(queueName, { durable: true });
         console.log(`Waiting for messages in queue: ${q.queue}`);
 
-        channel.bindQueue(q.queue, exchangeName, routingKey);
-        channel.consume(
-            q.queue,
-            (msg) => {
-                if (msg.content) {
-                    console.log('the message is:', msg.content.toString());
-                    subscribeEvents(msg.content.toString());
-                }
-                console.log('[X] received');
-                channel.ack(msg);
-            },
-            // {
-            //     noAck: true,
-            // },
-        );
-        // Wait indefinitely for messages
-        while (true) {
-            // console.log('Waiting for messages...');
-            // console.log()
-            await new Promise((resolve) => setTimeout(resolve, timeout));
-        }
-        // connection.on('error', (error) => {
-        //     if (error.code === 'ECONNRESET') {
-        //         console.error('Connection was reset');
-        //         // Try to reconnect
-        //         setTimeout(
-        //             () => SubscribeMessage(subscribeEvents, routingKey),
-        //             5000,
-        //         );
-        //     } else {
-        //         console.error('An error occurred:', error);
-        //     }
-        // });
+        const consumeMessage = (msg) => {
+            if (msg.content) {
+                console.log('Received message:', msg.content.toString());
+                subscribeEvents(msg.content.toString());
+            }
+            console.log('[X] Acknowledged');
+            channel.ack(msg);
+        };
+
+        channel.consume(queueName, consumeMessage);
+
+        // Graceful shutdown
+        process.on('SIGINT', async () => {
+            try {
+                console.log('Stopping message consumption...');
+                channel.cancel(consumeMessage);
+                await channel.close();
+                await connection.close();
+                console.log('Message consumption stopped gracefully');
+                // process.exit(0);
+            } catch (error) {
+                console.error('Error occurred during shutdown:', error);
+                // process.exit(1);
+            }
+        });
     } catch (error) {
         console.error('Failed to consume:', error);
         // setTimeout(() => SubscribeMessage(subscribeEvents, routingKey), 5000);
     }
-
-    // const connection = await amqp.connect('amqp://localhost');
-    // const channel = await connection.createChannel();
-    // const exchangeName = 'my_exchange';
-    // const exchangeType = 'direct';
-    // await channel.assertExchange(exchangeName, exchangeType, { durable: true });
-    // const queueName = 'my_queue';
-    // await channel.assertQueue(queueName, { durable: true });
-    // await channel.bindQueue(queueName, exchangeName, '');
-    // await channel.consume(queueName, (message) => {
-    //     console.log(`Received message: ${message.content.toString()}`);
-    //     channel.ack(message);
-    // });
 };
 
 // export const PublishMessage = (channel, service, msg) => {

@@ -1,6 +1,6 @@
 import { responseData } from '../utils/responses.js';
-import { PublishMessage, SubscribeMessage } from '../utils/messageBroker.js';
-import subscribeEvents from '../services/subscribeEvents.js';
+import { PublishMessage } from '../utils/messageBroker.js';
+// import subscribeEvents from '../services/subscribeEvents.js';
 import getProfile from '../services/profile/get.js';
 import { AuthorizeError } from '../utils/errorHandler.js';
 import config from '../config/index.js';
@@ -13,10 +13,7 @@ export class UsersController {
     constructor() {
         // this.channel = channel;
         // To listen
-        SubscribeMessage(subscribeEvents, 'Borrower').catch((error) => {
-            console.log('ERROR FROM ', error);
-            throw error;
-        });
+        // SubscribeMessage(subscribeEvents, 'Borrower');
         this.borrowerService = new BorrowerService();
     }
 
