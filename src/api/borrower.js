@@ -2,11 +2,12 @@ import { responseData } from '../utils/responses.js';
 import { PublishMessage } from '../utils/messageBroker.js';
 // import subscribeEvents from '../services/subscribeEvents.js';
 import getProfile from '../services/profile/get.js';
-import { AuthorizeError } from '../utils/errorHandler.js';
+import { AuthorizeError, ValidationError } from '../utils/errorHandler.js';
 import config from '../config/index.js';
 import requestLoan from '../services/requestLoan.js';
 import updateBorrowerStatus from '../services/updateBorrowerStatus.js';
 import BorrowerService from '../services/borrower.services.js';
+import Busboy from 'busboy';
 // import userServices from '../services/index.js';
 // subscribeEvents()
 export class UsersController {
@@ -38,8 +39,8 @@ export class UsersController {
     async postRequestLoan(req, res, next) {
         try {
             if (!req.header('user')) {
-                throw new AuthorizeError(
-                    'Request header not provided from API Gateway!',
+                throw new CredentialsError(
+                    'Unauthorized access! Please login before continue.',
                 );
             }
             const { userId, roles } = JSON.parse(req.header('user'));
@@ -56,7 +57,66 @@ export class UsersController {
             //     config.RABBITMQ.CHANNEL.LOAN,
             //     JSON.stringify({ data, event: 'LOAN_REQUEST' }),
             // );
-            res.status(201).json(responseData([], 'OK', '   '));
+            res.status(201).json(responseData([], true, ''));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async putVerifyBorrower(req, res, next) {
+        try {
+            if (!req.header('user')) {
+                throw new CredentialsError(
+                    'Unauthorized access! Please login before continue.',
+                );
+            }
+
+            const payload = {
+                ...req.body,
+
+                // fileName: req.uploadedFileName,
+            };
+
+            const { userId, roles } = JSON.parse(req.header('user'));
+            const data = await this.borrowerService.requestVerifyBorrower(
+                userId,
+                payload,
+                req.files,
+            );
+
+            res.status(200).json(
+                responseData(
+                    [],
+                    true,
+                    'Request to verify borrower successfully. Please wait for admin to verify your request.',
+                ),
+            );
+
+            // await imageUploadFirebase(req, res, next, async () => {
+            //     console.log('MASOKK');
+            //     if (!req.uploadedFileName) {
+            //         throw new ValidationError('You need to upload an image');
+            //     }
+
+            //     const payload = {
+            //         ...req.body,
+            //         fileName: req.uploadedFileName,
+            //     };
+
+            //     const { userId, roles } = JSON.parse(req.header('user'));
+            //     const data = await this.borrowerService.requestVerifyBorrower(
+            //         userId,
+            //         payload,
+            //     );
+
+            //     res.status(200).json(
+            //         responseData(
+            //             [],
+            //             true,
+            //             'Request to verify borrower successfully. Please wait for admin to verify your request.',
+            //         ),
+            //     );
+            // });
         } catch (error) {
             next(error);
         }

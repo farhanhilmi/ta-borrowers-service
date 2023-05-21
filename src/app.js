@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import Routes from './routes/index.js';
+import busboy from 'busboy';
+import multer from 'multer';
 
 export default async () => {
     try {
@@ -9,6 +11,66 @@ export default async () => {
         app.use(cors({ origin: '*' }));
         app.use(express.json());
         // app.use(cors({ origin: ['http://localhost:8000'] }));
+
+        // Specify the storage configuration
+        // const multerStorage = multer.memoryStorage();
+        // const upload = multer({ storage: multerStorage }).array('files', 5);
+
+        app.use((req, res, next) => {
+            if (req.is('multipart/form-data')) {
+                const bb = busboy({ headers: req.headers });
+                req.pipe(bb);
+                req.body = {};
+                req.files = [];
+
+                bb.on('field', (fieldname, val) => {
+                    req.body[fieldname] = val;
+                });
+
+                bb.on(
+                    'file',
+                    (fieldname, file, filename, encoding, mimetype) => {
+                        // Handle the file here, e.g., save it to disk or process it
+                        // This example simply assigns the file details to req.file
+
+                        // req.files.push({
+                        //     fieldname,
+                        //     filename,
+                        //     buffer: fileBuffer,
+                        //     mimetype: filename.mimeType,
+                        // });
+
+                        const chunks = [];
+
+                        file.on('data', (chunk) => {
+                            chunks.push(chunk);
+                        });
+
+                        file.on('end', () => {
+                            const fileBuffer = Buffer.concat(chunks);
+
+                            req.files.push({
+                                fieldname,
+                                filename,
+                                buffer: fileBuffer,
+                                mimetype: filename.mimeType,
+                            });
+                            // Process the file data (e.g., upload to Firebase)
+                            // Your custom logic goes here
+                        });
+
+                        // Consume the file stream to avoid leaving it open
+                        file.resume();
+                    },
+                );
+
+                bb.on('finish', () => {
+                    next();
+                });
+            } else {
+                next();
+            }
+        });
 
         app.use(
             morgan(

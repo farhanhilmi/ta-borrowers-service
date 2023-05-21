@@ -7,16 +7,22 @@ import mongoose from 'mongoose';
  * - late repayment = pinjaman sudah lunas / sudah selesai tapi terlambat
  * - unpaid = pinjaman belum lunas / belum selesai
  */
+// const statusOptions = {
+//     type: String,
+//     enum: [
+//         'on request',
+//         'on process',
+//         'in borrowing',
+//         'unpaid',
+//         'repayment',
+//         'late repayment',
+//     ].concat([null]),
+//     // default: null,
+// };
+
 const statusOptions = {
     type: String,
-    enum: [
-        'on request',
-        'on process',
-        'in borrowing',
-        'unpaid',
-        'repayment',
-        'late repayment',
-    ].concat([null]),
+    enum: ['not verified', 'verified', 'pending'].concat([null]),
     // default: null,
 };
 

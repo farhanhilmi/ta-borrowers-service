@@ -1,4 +1,19 @@
+import mongoose from 'mongoose';
 import _ from 'underscore';
+import lodash from 'lodash';
+
+export const toObjectId = (id) => {
+    return new mongoose.Types.ObjectId(id);
+};
+
+export const transformNestedObject = async (obj) => {
+    const nestedObject = {};
+    await lodash.forEach(obj, (value, key) => {
+        lodash.set(nestedObject, key, value);
+    });
+
+    return nestedObject;
+};
 
 export const toTitleCase = (str) => {
     return str
@@ -15,9 +30,28 @@ export const toTitleCase = (str) => {
  */
 export const validateRequestPayload = (payload, requiredFields = []) => {
     let errorFields = [];
+
     requiredFields.forEach((field) => {
-        if (!payload[field]) {
+        // if (typeof field === 'object') {
+        //     if (Object.keys(field).length > 0) {
+        //         for (const key in field) {
+        //             if (!Object.hasOwn(field, key)) {
+        //                 errorFields.push(key);
+        //             } else {
+        //                 if (!payload[key]) {
+        //                     errorFields.push(key);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        if (!Object.hasOwn(payload, field)) {
             errorFields.push(field);
+        } else {
+            if (!payload[field]) {
+                errorFields.push(field);
+            }
         }
     });
 

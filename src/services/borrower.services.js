@@ -7,18 +7,91 @@ import {
     NotFoundError,
     ValidationError,
 } from '../utils/errorHandler.js';
-import { omit, validateRequestPayload } from '../utils/index.js';
+import {
+    omit,
+    toObjectId,
+    transformNestedObject,
+    validateRequestPayload,
+} from '../utils/index.js';
+import connection from '../database/connection.js';
+import { uploadFileToFirebase } from '../utils/firebase.js';
 
+const validateRequest = (payload, personal, relativesContact) => {
+    let errors = validateRequestPayload(payload, [
+        'personal',
+        'relativesContact',
+    ]);
+
+    if (errors.length > 0) {
+        throw new ValidationError(`${errors} field(s) are required!`);
+    }
+
+    errors = validateRequestPayload(personal, [
+        'fullName',
+        'gender',
+        'birthDate',
+        'work',
+    ]);
+
+    if (errors.length > 0) {
+        throw new ValidationError(
+            `${errors} field(s) in personal are required!`,
+        );
+    }
+
+    errors = validateRequestPayload(personal.work, ['name', 'salary']);
+
+    if (errors.length > 0) {
+        throw new ValidationError(
+            `${errors} field(s) in personal.work are required!`,
+        );
+    }
+
+    errors = validateRequestPayload(relativesContact, [
+        'firstRelative',
+        'secondRelative',
+    ]);
+
+    if (errors.length > 0) {
+        throw new ValidationError(
+            `${errors} field(s) in relativesContact are required!`,
+        );
+    }
+
+    errors = validateRequestPayload(relativesContact.firstRelative, [
+        'name',
+        'relation',
+        'phoneNumber',
+    ]);
+
+    if (errors.length > 0) {
+        throw new ValidationError(
+            `${errors} field(s) in relativesContact.firstRelative are required!`,
+        );
+    }
+
+    errors = validateRequestPayload(relativesContact.secondRelative, [
+        'name',
+        'relation',
+        'phoneNumber',
+    ]);
+
+    if (errors.length > 0) {
+        throw new ValidationError(
+            `${errors} field(s) in relativesContact.secondRelative are required!`,
+        );
+    }
+};
 export default class BorrowerService {
     constructor() {
         this.borrowerModels = borrowerModels;
         this.relativesModels = relativesModels;
         this.workModels = workModels;
+        this.usersCollection = connection.collection('users');
     }
 
     async createBorrower(userId) {
         try {
-            console.log('MASUK');
             // Check if user already has a borrower account
             if (await this.borrowerModels.findOne({ userId })) {
                 return;
@@ -60,6 +133,96 @@ export default class BorrowerService {
             return borrower;
         } catch (error) {
             // console.log('ERROR FROM CREATE BORROWER SERVICE', error);
+            throw error;
+        }
+    }
+
+    async requestVerifyBorrower(userId, payload, files) {
+        try {
+            payload = await transformNestedObject(payload);
+
+            const user = await this.usersCollection.findOne({
+                _id: toObjectId(userId),
+            });
+            const borrower = await this.borrowerModels.findOne({ userId });
+
+            if (!borrower) {
+                throw new NotFoundError('Borrower account not found!');
+            }
+
+            if (!user.roles.includes('borrower')) {
+                throw new AuthorizeError('User is not a borrower!');
+            }
+
+            const { personal, relativesContact } = payload;
+
+            // it will throw an error if there is a missing field
+            validateRequest(payload, personal, relativesContact);
+
+            const relatives = {
+                firstRelative: {
+                    name: relativesContact.firstRelative.name,
+                    relation: relativesContact.firstRelative.relation,
+                    phoneNumber: relativesContact.firstRelative.phoneNumber,
+                },
+                secondRelative: {
+                    name: relativesContact.secondRelative.name,
+                    relation: relativesContact.secondRelative.relation,
+                    phoneNumber: relativesContact.secondRelative.phoneNumber,
+                },
+            };
+
+            await Promise.allSettled([
+                await borrower.updateOne({ status: 'pending' }),
+
+                await this.relativesModels.findOneAndUpdate(
+                    { userId },
+                    {
+                        firstRelative: relatives.firstRelative,
+                        secondRelative: relatives.secondRelative,
+                    },
+                ),
+                await this.workModels.findOneAndUpdate(
+                    { borrowerId: borrower._id },
+                    {
+                        salary: personal.work.salary,
+                        position: personal.work.name,
+                    },
+                ),
+            ]);
+
+            // Upload the files to Firebase Storage
+            // const fileUrls = await Promise.all(
+            //     files.map(async (file) => {
+            //         const category = file.fieldname;
+            //         const path = `borrower/${category}/${userId}-${Date.now()}`;
+            //         const url = await uploadFileToFirebase(file, path);
+            //         return { [category]: url };
+            //     }),
+            // );
+
+            const currentDate = Date.now();
+            const fileUrls = await files.reduce(async (accPromise, file) => {
+                const acc = await accPromise;
+                const category = file.fieldname;
+                const path = `borrower/${category}/${userId}-${currentDate}`;
+                const url = await uploadFileToFirebase(file, path);
+                acc[category] = url;
+                return acc;
+            }, {});
+
+            await this.usersCollection.findOneAndUpdate(
+                { _id: toObjectId(userId) },
+                {
+                    $set: {
+                        faceImage: fileUrls.faceImage,
+                        idCardImage: fileUrls.idCardImage,
+                        gender: personal.gender,
+                        birthDate: personal.birthDate,
+                    },
+                },
+            );
+        } catch (error) {
             throw error;
         }
     }
