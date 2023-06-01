@@ -81,6 +81,15 @@ export default async () => {
             return req.params[param];
         });
 
+        app.get('/', (req, res, next) => {
+            res.status(200).json({
+                status: 'success',
+                environment: process.env.NODE_ENV,
+                message: `Welcome to the API. Please use the correct endpoint.`,
+            });
+            res.end();
+        });
+
         app.use(Routes());
 
         // API ENDPOINT NOT FOUND

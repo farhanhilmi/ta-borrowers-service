@@ -15,8 +15,9 @@
     },
     "scripts": {
         "test": "jest --coverage --detectOpenHandles",
-        "start": "set NODE_ENV=development& node ./src/server.js",
+        "start": "set NODE_ENV=production& node ./src/server.js",
         "dev": "set NODE_ENV=development&& nodemon ./src/server.js",
+        "build": "babel serviceAccountKey.js -d serviceAccountKeyDis.js --ignore ./node_modules,./src/tests",
         "gcp-change": "gcloud config set project ta-borrowers-service",
         "deploy": "gcloud app deploy"
     },
@@ -38,6 +39,10 @@
         "underscore": "^1.13.6"
     },
     "devDependencies": {
+        "@babel/cli": "^7.21.5",
+        "@babel/core": "^7.21.8",
+        "@babel/node": "^7.20.7",
+        "@babel/plugin-transform-modules-commonjs": "^7.21.5",
         "@babel/preset-env": "^7.21.4",
         "babel-jest": "^29.5.0",
         "jest": "^29.5.0",

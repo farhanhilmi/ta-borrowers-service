@@ -57,7 +57,13 @@ export class UsersController {
             //     config.RABBITMQ.CHANNEL.LOAN,
             //     JSON.stringify({ data, event: 'LOAN_REQUEST' }),
             // );
-            res.status(201).json(responseData([], true, ''));
+            res.status(201).json(
+                responseData(
+                    [],
+                    true,
+                    'Loan request sent! Please check accordingly in your dashboard and your email for further information!',
+                ),
+            );
         } catch (error) {
             next(error);
         }
@@ -77,8 +83,8 @@ export class UsersController {
                 // fileName: req.uploadedFileName,
             };
 
-            const { userId, roles } = JSON.parse(req.header('user'));
-            const data = await this.borrowerService.requestVerifyBorrower(
+            const { userId } = JSON.parse(req.header('user'));
+            await this.borrowerService.requestVerifyBorrower(
                 userId,
                 payload,
                 req.files,
@@ -91,32 +97,6 @@ export class UsersController {
                     'Request to verify borrower successfully. Please wait for admin to verify your request.',
                 ),
             );
-
-            // await imageUploadFirebase(req, res, next, async () => {
-            //     console.log('MASOKK');
-            //     if (!req.uploadedFileName) {
-            //         throw new ValidationError('You need to upload an image');
-            //     }
-
-            //     const payload = {
-            //         ...req.body,
-            //         fileName: req.uploadedFileName,
-            //     };
-
-            //     const { userId, roles } = JSON.parse(req.header('user'));
-            //     const data = await this.borrowerService.requestVerifyBorrower(
-            //         userId,
-            //         payload,
-            //     );
-
-            //     res.status(200).json(
-            //         responseData(
-            //             [],
-            //             true,
-            //             'Request to verify borrower successfully. Please wait for admin to verify your request.',
-            //         ),
-            //     );
-            // });
         } catch (error) {
             next(error);
         }

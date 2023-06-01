@@ -5,7 +5,6 @@ import {
     ValidationError,
 } from '../utils/errorHandler.js';
 import { validateRequestPayload } from '../utils/index.js';
-import axios from 'axios';
 
 export default async (user, payload) => {
     try {

@@ -5,6 +5,7 @@ import {
     ActiveLoanError,
     AuthorizeError,
     NotFoundError,
+    RequestError,
     ValidationError,
 } from '../utils/errorHandler.js';
 import {
@@ -88,6 +89,7 @@ export default class BorrowerService {
         this.relativesModels = relativesModels;
         this.workModels = workModels;
         this.usersCollection = connection.collection('users');
+        this.loansCollection = connection.collection('loans');
     }
 
     async createBorrower(userId) {
@@ -312,37 +314,67 @@ export default class BorrowerService {
     //     }
     // }
 
+    // Borrower can request a loan, and it will be shown in the lender's loan request list
     async requestLoan(user, payload) {
         try {
             const errors = validateRequestPayload(payload, [
-                'loanPurpose',
+                'purpose',
                 'amount',
                 'tenor',
-                'interestRate',
-                'repaymentSource',
-                'description',
-                // 'repaymentDate',
+                'yieldReturn',
+                'paymentSchema',
+                'borrowingCategory',
             ]);
             if (errors.length > 0) {
                 throw new ValidationError(`${errors} field(s) are required!`);
             }
 
             const {
-                loanPurpose,
+                purpose,
                 amount,
                 tenor,
-                interestRate,
-                repaymentAmount,
-                repaymentDate,
-                description,
+                yieldReturn,
+                paymentSchema,
+                borrowingCategory,
             } = payload;
 
-            // * TODO:
+            if (yieldReturn < 50000) {
+                throw new RequestError('Minimum loan yield is 50000');
+            }
+
             // * - Check if user is a borrower
             if (!user.roles.includes('borrower')) {
                 throw new AuthorizeError('User is not a borrower!');
             }
+
+            // check payment schema value is valid
+            if (
+                paymentSchema !== 'Pelunasan Cicilan' &&
+                paymentSchema !== 'Pelunasan Langsung'
+            ) {
+                throw new RequestError(
+                    'Payment schema must be Pelunasan Cicilan or Pelunasan Langsung',
+                );
+            }
+
             // * - check if user already has an active loan
+            const [loan, borrower] = await Promise.allSettled([
+                this.loansCollection.findOne({
+                    userId: toObjectId(user.userId),
+                }),
+                this.borrowerModels.findOne({ userId: user.userId }),
+            ]);
+
+            if (
+                loan.value &&
+                (loan.value.status === 'on request' ||
+                    loan.value.status === 'in borrowing' ||
+                    loan.value.status === 'on process' ||
+                    loan.value.status === 'unpaid')
+            ) {
+                throw new ActiveLoanError('You already has an active loan!');
+            }
+
             // const loanStatus = await axios.get(
             //     `http://localhost:8004/check/${user.userId}/iniktpnomor`,
             // );
@@ -352,33 +384,32 @@ export default class BorrowerService {
             // ]);
             console.log('userId', user.userId);
 
-            const borrower = await this.borrowerModels.findOne({
-                userId: user.userId,
-            });
-            console.log('borrower', borrower);
-            if (
-                borrower.status === 'on request' ||
-                borrower.status === 'in borrowing' ||
-                borrower.status === 'unpaid' ||
-                borrower.status === 'on process'
-            ) {
-                throw new ActiveLoanError('You already has an active loan!');
-            }
+            // const borrower = await this.borrowerModels.findOne({
+            //     userId: user.userId,
+            // });
+            // console.log('borrower', borrower);
+            // if (
+            //     borrower.status === 'on request' ||
+            //     borrower.status === 'in borrowing' ||
+            //     borrower.status === 'unpaid' ||
+            //     borrower.status === 'on process'
+            // ) {
+            //     throw new ActiveLoanError('You already has an active loan!');
+            // }
             // *TODO - check if user loan limit is not exceeded
 
             const loanApplication = {
-                loanPurpose,
+                purpose,
                 amount,
                 tenor,
-                interestRate,
-                repaymentAmount,
-                repaymentDate,
-                description,
+                yieldReturn,
+                paymentSchema,
+                borrowingCategory,
             };
 
             const userData = {
                 userId: user.userId,
-                borrowerId: borrower._id,
+                borrowerId: borrower.value._id,
             };
 
             return { user: userData, loanApplication };
