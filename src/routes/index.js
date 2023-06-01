@@ -6,7 +6,7 @@ const Routes = () => {
     const controller = new UsersController();
     router.get('/profile', controller.getProfile.bind(controller));
 
-    router.post('/request/loan', controller.postRequestLoan.bind(controller));
+    router.post('/loan', controller.postRequestLoan.bind(controller));
     router.put(
         '/request/verification',
         controller.putVerifyBorrower.bind(controller),
