@@ -365,6 +365,12 @@ export default class BorrowerService {
                 this.borrowerModels.findOne({ userId: user.userId }),
             ]);
 
+            if (borrower.value.status !== 'verified') {
+                throw new AuthorizeError(
+                    'Borrower must be verified to request a loan!',
+                );
+            }
+
             if (
                 loan.value &&
                 (loan.value.status === 'on request' ||

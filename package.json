@@ -17,7 +17,8 @@
         "test": "jest --coverage --detectOpenHandles",
         "start": "set NODE_ENV=production& node ./src/server.js",
         "dev": "set NODE_ENV=development&& nodemon ./src/server.js",
-        "build": "babel serviceAccountKey.js -d serviceAccountKeyDis.js --ignore ./node_modules,./src/tests",
+        "build": "babel src -d dist --ignore ./node_modules,./src/tests",
+        "build-key": "babel serviceAccountKey.js -d serviceAccountKeyDis.js --ignore ./node_modules,./src/tests",
         "gcp-change": "gcloud config set project ta-borrowers-service",
         "deploy": "gcloud app deploy"
     },

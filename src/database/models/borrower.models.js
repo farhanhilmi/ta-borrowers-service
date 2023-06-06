@@ -44,6 +44,32 @@ const schema = new Schema(
             default: null,
         },
         status: statusOptions,
+        performance: {
+            borrowingRecord: {
+                borrowedFund: {
+                    type: Number,
+                    default: 0,
+                },
+                totalBorrowing: {
+                    type: Number,
+                    default: 0,
+                },
+            },
+            repayment: {
+                earlier: {
+                    type: Number,
+                    default: 0,
+                },
+                onTime: {
+                    type: Number,
+                    default: 0,
+                },
+                late: {
+                    type: Number,
+                    default: 0,
+                },
+            },
+        },
     },
     {
         timestamps: { createdAt: 'createdDate', updatedAt: 'modifyDate' },
